@@ -1,4 +1,4 @@
-Peepcoin v1.0.0.1 BETA
+Peepcoin v1.0.3.0 BETA
 
 Copyright (c) 2009-2013 The Bitcoin Core developers
 Copyright (c) 2009-2013 Bitcoin Developers

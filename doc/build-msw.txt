@@ -217,8 +217,6 @@ cd C:\Qt\5.7.1
 
 configure.bat -release -opensource -confirm-license -static -make libs -no-sql-sqlite -no-opengl -system-zlib -no-icu -no-gif -no-libjpeg -no-freetype -no-angle -no-openvg -no-audio-backend -nomake tools -nomake examples -nomake tests -no-directwrite -openssl-linked -I c:\deps\openssl-1.0.2n\include -L c:\deps\openssl-1.0.2n OPENSSL_LIBS="-lssl -lcrypto -lgdi32"
 
-(Configure could maybe use tweaking but got it to build. Please note the make *install* below as it's required as a workaround)
-
 mingw32-make
 ```
 
