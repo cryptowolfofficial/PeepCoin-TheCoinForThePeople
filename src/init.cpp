@@ -296,7 +296,7 @@ std::string HelpMessage()
         "  -keypool=<n>           " + _("Set key pool size to <n> (default: 100)") + "\n" +
         "  -rescan                " + _("Rescan the block chain for missing wallet transactions") + "\n" +
         "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + "\n" +
-        "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 2500, 0 = all)") + "\n" +
+        "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 500, 0 = all)") + "\n" +
         "  -checklevel=<n>        " + _("How thorough the block verification is (0-6, default: 1)") + "\n" +
         "  -loadblock=<file>      " + _("Imports blocks from external blk000?.dat file") + "\n" +
 
@@ -384,19 +384,19 @@ bool AppInit2()
     fUseFastIndex = GetBoolArg("-fastindex", true);
     nMinerSleep = GetArg("-minersleep", 500);
 
-#ifdef USE_STAKECOMBINATION
+
     if(fTestNet) {
-        nStakeMinTime = (uint)GetArg("-stakemintime", 2);
-        nStakeMinDepth = (uint)GetArg("-stakemindepth", 0);
+        nStakeMinTime = (uint64_t)GetArg("-stakemintime", 2);
+        nStakeMinDepth = (uint64_t)GetArg("-stakemindepth", 0);
     } else {
-        nStakeMinTime = (uint)GetArg("-stakemintime", 2);
-        nStakeMinDepth = (uint)GetArg("-stakemindepth", 0);
+        nStakeMinTime = (uint64_t)GetArg("-stakemintime", 2);
+        nStakeMinDepth = (uint64_t)GetArg("-stakemindepth", 0);
     }
     /* Reset time if depth is specified */
     if(nStakeMinDepth) nStakeMinTime = 0;
     //qDebug() <<"nStakeMinDepth: " << nStakeMinDepth;
     //qDebug() <<"nStakeMinTime: " << nStakeMinTime;
-#endif
+
     CheckpointsMode = Checkpoints::STRICT;
     std::string strCpMode = GetArg("-cppolicy", "strict");
 
@@ -502,7 +502,7 @@ bool AppInit2()
             return InitError(strprintf(_("Invalid amount for -mininput=<amount>: '%s'"), mapArgs["-mininput"].c_str()));
     }
 
-#ifdef USE_STAKECOMBINATION
+
     /* Inputs below this limit in value don't participate in staking */
     if(mapArgs.count("-stakeminvalue")) {
         nStakeMinValue = atoi(mapArgs["-stakeminvalue"]);
@@ -530,7 +530,7 @@ bool AppInit2()
         if(nSplitThreshold < 2 * MIN_STAKE_AMOUNT)
           nSplitThreshold = 2 * MIN_STAKE_AMOUNT;
     }
-#endif
+
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
     // Sanity check
     if (!InitSanityCheck())

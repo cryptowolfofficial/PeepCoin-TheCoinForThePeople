@@ -26,10 +26,8 @@
 #include "guiutil.h"
 #include "rpcconsole.h"
 #include "wallet.h"
-#ifdef USE_GUITESTING
 #include "mintingview.h"
 #include "blockbrowser.h"
-#endif
 #ifdef Q_OS_MAC
 #include "macdockiconhandler.h"
 #endif
@@ -52,7 +50,6 @@
 #include <QProgressBar>
 #include <QStackedWidget>
 #include <QDateTime>
-#include <QMovie>
 #include <QFileDialog>
 #include <QDesktopServices>
 #include <QTimer>
@@ -77,14 +74,17 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     trayIcon(0),
     notificator(0),
     rpcConsole(0),
-    nWeight(0)
+    nWeight(0),
+	spinnerFrame(0)
 {
-    setFixedSize(1000, 542);
+	setFixedSize(1000, 542);
+	setMaximumSize(QWIDGETSIZE_MAX,QWIDGETSIZE_MAX);
+	setMinimumSize(0,0);
     setWindowTitle(tr("Peepcoin") + " - " + tr("Wallet"));
 #ifdef Q_OS_LINUX
 	qApp->setStyleSheet("QMainWindow { background-image:url(:images/bkg2);border:none;font-family:'Open Sans,sans-serif'; }");
 #else
-	qApp->setStyleSheet("QMainWindow { background-image:url(:images/bkg);border:none;font-family:'Open Sans,sans-serif'; }");
+	qApp->setStyleSheet("QMainWindow { border-image:url(:images/bkg);border:none;font-family:'Open Sans,sans-serif'; }");
 #endif
 #ifndef Q_OS_MAC
     qApp->setWindowIcon(QIcon(":icons/bitcoin"));
@@ -132,7 +132,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     centralWidget->addWidget(sendCoinsPage);
     setCentralWidget(centralWidget);
 
-#ifdef USE_GUITESTING
+
     mintingPage = new QWidget(this);
     QVBoxLayout *vboxMinting = new QVBoxLayout();
     mintingView = new MintingView(this);
@@ -142,7 +142,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     blockExplorer = new BlockBrowser(this);
     centralWidget->addWidget(blockExplorer);
-#endif
+
     // Create status bar
     statusBar();
 
@@ -194,8 +194,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(frameBlocks);
-
-    syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
 
     // Clicking on a transaction on the overview page simply sends you to transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
@@ -258,7 +256,7 @@ void BitcoinGUI::createActions()
     addressBookAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
     tabGroup->addAction(addressBookAction);
 
-#ifdef USE_GUITESTING
+
     // Minting View
     mintingViewAction = new QAction(QIcon(":/icons/stake"), tr("&Staking"), this);
     mintingViewAction->setToolTip(tr("Shows staking details"));
@@ -279,7 +277,7 @@ void BitcoinGUI::createActions()
 
     connect(blockexplorerAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(blockexplorerAction, SIGNAL(triggered()), this, SLOT(gotoBlockexplorerPage()));
-#endif
+
 
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
@@ -296,10 +294,20 @@ void BitcoinGUI::createActions()
     quitAction->setToolTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
+	faqAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Wallet FAQ"), this);
+    faqAction->setToolTip(tr("Peepcoin Wallet FAQ"));
+	faq2Action = new QAction(QIcon(":/icons/staking_on"), tr("&Staking FAQ"), this);
+    faq2Action->setToolTip(tr("Peepcoin Staking FAQ"));
+	faq3Action = new QAction(QIcon(":/icons/bitcoin"), tr("&General FAQ"), this);
+    faq3Action->setToolTip(tr("Peepcoin General FAQ"));
+	whitepaperAction = new QAction(QIcon(":/icons/bitcoin"), tr("&DAPS Whitepaper"), this);
+    whitepaperAction->setToolTip(tr("DAPS Whitepaper"));
+	swapAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Swap Info"), this);
+    swapAction->setToolTip(tr("Swap Info"));
     aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About Peepcoin"), this);
     aboutAction->setToolTip(tr("Show information about Peepcoin"));
     aboutAction->setMenuRole(QAction::AboutRole);
-    aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
+    aboutQtAction = new QAction(QIcon(":/icons/about_qt"), tr("About &Qt"), this);
     aboutQtAction->setToolTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
@@ -319,6 +327,53 @@ void BitcoinGUI::createActions()
     lockWalletAction->setToolTip(tr("Lock wallet"));
     signMessageAction = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
     verifyMessageAction = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
+	
+	bleuBTCAction = new QAction(QIcon(":/icons/bleutrade"), tr("&Bleutrade - PCN/BTC"), this);
+    bleuBTCAction->setToolTip(tr("Buy Peepcoin with BTC on Bleutrade"));
+	bleuDOGEAction = new QAction(QIcon(":/icons/bleutrade"), tr("&Bleutrade - PCN/DOGE"), this);
+    bleuDOGEAction->setToolTip(tr("Buy Peepcoin with DOGE on Bleutrade"));
+	bleuETHAction = new QAction(QIcon(":/icons/bleutrade"), tr("&Bleutrade - PCN/ETH"), this);
+	bleuETHAction->setToolTip(tr("Buy Peepcoin with ETH on Bleutrade"));
+    bleuUSDTAction = new QAction(QIcon(":/icons/bleutrade"), tr("&Bleutrade - PCN/USDT"), this);
+    bleuUSDTAction->setToolTip(tr("Buy Peepcoin with USDT on Bleutrade"));
+	tradeOgreAction = new QAction(QIcon(":/icons/tradeogre"), tr("&TradeOgre - PCN/BTC"), this);
+    tradeOgreAction->setToolTip(tr("Buy Peepcoin for BTC on TradeOgre"));
+	cryptoHubAction = new QAction(QIcon(":/icons/cryptohub"), tr("&CryptoHub - PCN/BTC"), this);
+    cryptoHubAction->setToolTip(tr("Buy Peepcoin for BTC on CryptoHub"));
+	cpatexBTCAction = new QAction(QIcon(":/icons/cpatex"), tr("&C-Patex - PCN/BTC"), this);
+    cpatexBTCAction->setToolTip(tr("Buy Peepcoin for BTC on C-Patex"));
+	cpatexDOGEAction = new QAction(QIcon(":/icons/cpatex"), tr("&C-Patex - PCN/DOGE"), this);
+	cpatexDOGEAction->setToolTip(tr("Buy Peepcoin for DOGE on C-Patex"));
+	cryptopiaAction = new QAction(QIcon(":/icons/cryptopia"), tr("Cryptopia - Coming Soon"), this);
+	cryptopiaAction->setToolTip(tr("Buy Peepcoin for BTC on Cryptopia - Coming SOON"));
+	cryptobridgeAction = new QAction(QIcon(":/icons/cryptobridge"), tr("&CryptoBridge - Coming Soon"), this);
+	cryptobridgeAction->setToolTip(tr("Buy Peepcoin for BTC on CryptoBridge - Coming Soon"));
+	otherExchangesAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Other Exchanges"), this);
+	otherExchangesAction->setToolTip(tr("Other Exchanges currently listing PeepCoin"));
+	
+	facebookAction = new QAction(QIcon(":/icons/facebook"), tr("Facebook"), this);
+    facebookAction->setToolTip(tr("DAPS Facebook"));
+	twitterAction = new QAction(QIcon(":/icons/twitter"), tr("Twitter"), this);
+    twitterAction->setToolTip(tr("DAPS Twitter"));
+	discordAction = new QAction(QIcon(":/icons/discord"), tr("Discord"), this);
+    discordAction->setToolTip(tr("DAPS Discord"));
+	telegramAction = new QAction(QIcon(":/icons/telegram"), tr("Telegram - Main"), this);
+    telegramAction->setToolTip(tr("DAPS Telegram - Main"));
+	telegram2Action = new QAction(QIcon(":/icons/telegram"), tr("Telegram - Announcements"), this);
+    telegram2Action->setToolTip(tr("DAPS Telegram - Announcements"));
+	telegram3Action = new QAction(QIcon(":/icons/telegram"), tr("Telegram - How To"), this);
+    telegram3Action->setToolTip(tr("DAPS Telegram - How To"));
+	telegram4Action = new QAction(QIcon(":/icons/telegram"), tr("Telegram - Moon Spam"), this);
+    telegram4Action->setToolTip(tr("DAPS Telegram - Moon Spam"));
+	mediumAction = new QAction(QIcon(":/icons/medium"), tr("Medium"), this);
+    mediumAction->setToolTip(tr("DAPS Medium"));
+	steemitAction = new QAction(QIcon(":/icons/steemit"), tr("Steemit"), this);
+    steemitAction->setToolTip(tr("DAPS Steemit"));
+	instagramAction = new QAction(QIcon(":/icons/instagram"), tr("Instagram"), this);
+    instagramAction->setToolTip(tr("DAPS Instagram"));
+	redditAction = new QAction(QIcon(":/icons/reddit"), tr("Reddit"), this);
+    redditAction->setToolTip(tr("DAPS Reddit"));
+
 
     exportAction = new QAction(QIcon(":/icons/export"), tr("&Export..."), this);
     exportAction->setToolTip(tr("Export the data in the current tab to a file"));
@@ -327,6 +382,11 @@ void BitcoinGUI::createActions()
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
+	connect(faqAction, SIGNAL(triggered()), this, SLOT(faqClicked()));
+	connect(faq2Action, SIGNAL(triggered()), this, SLOT(faq2Clicked()));
+	connect(faq3Action, SIGNAL(triggered()), this, SLOT(faq3Clicked()));
+	connect(swapAction, SIGNAL(triggered()), this, SLOT(swapClicked()));
+	connect(whitepaperAction, SIGNAL(triggered()), this, SLOT(whitepaperClicked()));
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
@@ -337,6 +397,28 @@ void BitcoinGUI::createActions()
     connect(lockWalletAction, SIGNAL(triggered()), this, SLOT(lockWallet()));
     connect(signMessageAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
     connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
+	
+	connect(bleuBTCAction, SIGNAL(triggered()), this, SLOT(bleuBTCClicked()));
+	connect(bleuDOGEAction, SIGNAL(triggered()), this, SLOT(bleuDOGEClicked()));
+    connect(bleuETHAction, SIGNAL(triggered()), this, SLOT(bleuETHClicked()));
+	connect(bleuUSDTAction, SIGNAL(triggered()), this, SLOT(bleuUSDTClicked()));
+	connect(tradeOgreAction, SIGNAL(triggered()), this, SLOT(tradeOgreClicked()));
+	connect(cryptoHubAction, SIGNAL(triggered()), this, SLOT(cryptoHubClicked()));
+	connect(cpatexBTCAction, SIGNAL(triggered()), this, SLOT(cpatexBTCClicked()));
+	connect(cpatexDOGEAction, SIGNAL(triggered()), this, SLOT(cpatexDOGEClicked()));
+	connect(otherExchangesAction, SIGNAL(triggered()), this, SLOT(otherExchangesClicked()));
+	
+	connect(facebookAction, SIGNAL(triggered()), this, SLOT(facebookActionClicked()));
+	connect(twitterAction, SIGNAL(triggered()), this, SLOT(twitterActionClicked()));
+	connect(discordAction, SIGNAL(triggered()), this, SLOT(discordActionClicked()));
+	connect(telegramAction, SIGNAL(triggered()), this, SLOT(telegramActionClicked()));
+	connect(telegram2Action, SIGNAL(triggered()), this, SLOT(telegram2ActionClicked()));
+	connect(telegram3Action, SIGNAL(triggered()), this, SLOT(telegram3ActionClicked()));
+	connect(telegram4Action, SIGNAL(triggered()), this, SLOT(telegram4ActionClicked()));
+	connect(mediumAction, SIGNAL(triggered()), this, SLOT(mediumActionClicked()));
+	connect(steemitAction, SIGNAL(triggered()), this, SLOT(steemitActionClicked()));
+	connect(instagramAction, SIGNAL(triggered()), this, SLOT(instagramActionClicked()));
+	connect(redditAction, SIGNAL(triggered()), this, SLOT(redditActionClicked()));
 }
 
 void BitcoinGUI::createMenuBar()
@@ -366,11 +448,47 @@ void BitcoinGUI::createMenuBar()
     settings->addSeparator();
     settings->addAction(optionsAction);
 
+	QMenu *exchanges = appMenuBar->addMenu(tr("Exchanges"));
+	exchanges->addAction(bleuBTCAction);
+	exchanges->addAction(bleuDOGEAction);
+	exchanges->addAction(bleuETHAction);
+	exchanges->addAction(bleuUSDTAction);	
+	exchanges->addSeparator();
+	exchanges->addAction(tradeOgreAction);
+    exchanges->addSeparator();
+	exchanges->addAction(cryptoHubAction);
+    exchanges->addSeparator();
+    exchanges->addAction(cpatexBTCAction);
+    exchanges->addAction(cpatexDOGEAction);
+	exchanges->addSeparator();
+	exchanges->addAction(otherExchangesAction);
+	
+	QMenu *socials = appMenuBar->addMenu(tr("Social"));
+	socials->addAction(facebookAction);
+	socials->addAction(twitterAction);
+	socials->addAction(discordAction);
+	socials->addAction(telegramAction);
+	socials->addAction(telegram2Action);
+	socials->addAction(telegram3Action);
+	socials->addAction(telegram4Action);
+	socials->addAction(mediumAction);
+    socials->addAction(steemitAction);
+    socials->addAction(instagramAction);
+	socials->addAction(redditAction);
+	
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
     help->addAction(openRPCConsoleAction);
+	help->addSeparator();
+	help->addAction(faqAction);
+	help->addAction(faq2Action);
+	help->addAction(faq3Action);
+	help->addSeparator();
+	help->addAction(whitepaperAction);
+	help->addAction(swapAction);	
     help->addSeparator();
     help->addAction(aboutAction);
     help->addAction(aboutQtAction);
+	
 }
 
 void BitcoinGUI::createToolBars()
@@ -389,10 +507,9 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(receiveCoinsAction);
     toolbar->addAction(historyAction);
     toolbar->addAction(addressBookAction);
-#ifdef USE_GUITESTING
     toolbar->addAction(mintingViewAction);
     toolbar->addAction(blockexplorerAction);
-#endif
+
     QToolBar *toolbar2 = addToolBar(tr("Actions toolbar"));
     toolbar2->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 #ifdef Q_OS_LINUX
@@ -456,9 +573,7 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
 
         // Put transaction list in tabs
         transactionView->setModel(walletModel);
-#ifdef USE_GUITESTING
         mintingView->setModel(walletModel);
-#endif
         overviewPage->setModel(walletModel);
         addressBookPage->setModel(walletModel->getAddressTableModel());
         receiveCoinsPage->setModel(walletModel->getAddressTableModel());
@@ -541,6 +656,122 @@ void BitcoinGUI::aboutClicked()
     dlg.setModel(clientModel);
     dlg.exec();
 }
+
+void BitcoinGUI::faqClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://www.dapscoin.com/wallets"));
+}
+
+void BitcoinGUI::faq2Clicked()
+{
+	QDesktopServices::openUrl(QUrl("https://www.dapscoin.com/staking"));
+}
+
+void BitcoinGUI::faq3Clicked()
+{
+	QDesktopServices::openUrl(QUrl("https://dapscoin.com/roadmap/#faq"));
+}
+
+void BitcoinGUI::swapClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://dapscoin.com/swap"));
+}
+
+void BitcoinGUI::whitepaperClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://dapscoin.com/whitepaper.pdf"));
+}
+
+void BitcoinGUI::bleuBTCClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://bleutrade.com/exchange/PCN/BTC"));
+}
+
+void BitcoinGUI::bleuDOGEClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://bleutrade.com/exchange/PCN/DOGE"));
+}
+
+void BitcoinGUI::bleuETHClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://bleutrade.com/exchange/PCN/ETH"));
+}
+
+void BitcoinGUI::bleuUSDTClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://bleutrade.com/exchange/PCN/USDT"));
+}
+
+void BitcoinGUI::tradeOgreClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://tradeogre.com/exchange/BTC-PCN"));
+}
+
+void BitcoinGUI::cryptoHubClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://cryptohub.online/market/PCN/"));
+}
+
+void BitcoinGUI::cpatexBTCClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://c-patex.com/markets/pcnbtc"));
+}
+
+void BitcoinGUI::cpatexDOGEClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://c-patex.com/markets/pcndoge"));
+}
+
+void BitcoinGUI::otherExchangesClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://www.dapscoin.com/markets"));
+}
+
+void BitcoinGUI::facebookActionClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://www.facebook.com/dapscoinofficial/"));
+}
+void BitcoinGUI::twitterActionClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://twitter.com/DAPScoin"));
+}
+void BitcoinGUI::discordActionClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://discord.gg/w898czA"));
+}
+void BitcoinGUI::telegramActionClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://t.me/dapscoin"));
+}
+void BitcoinGUI::telegram2ActionClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://t.me/DAPSUpdates"));
+}
+void BitcoinGUI::telegram3ActionClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://t.me/HOW_TO_DAPS"));
+}
+void BitcoinGUI::telegram4ActionClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://t.me/DAPS_MOONSPAM"));
+}
+void BitcoinGUI::mediumActionClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://medium.com/dapscoinofficial"));
+}
+void BitcoinGUI::instagramActionClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://www.instagram.com/official_dapscoin/"));
+}
+void BitcoinGUI::redditActionClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://www.reddit.com/r/DAPSCoin/"));
+}
+void BitcoinGUI::steemitActionClicked()
+{
+	QDesktopServices::openUrl(QUrl("https://steemit.com/@dapscoin/"));
+}
+
 
 void BitcoinGUI::setNumConnections(int count)
 {
@@ -642,8 +873,13 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
     else
     {
         tooltip = tr("Catching up...") + QString("<br>") + tooltip;
-        labelBlocksIcon->setMovie(syncIconMovie);
-        syncIconMovie->start();
+		{
+            labelBlocksIcon->setPixmap(QIcon(QString(
+                ":/movies/spinner-%1").arg(spinnerFrame, 3, 10, QChar('0')))
+                .pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+            spinnerFrame = (spinnerFrame + 1) % SPINNER_FRAMES;
+        }
+
 
         overviewPage->showOutOfSyncWarning(true);
     }
@@ -803,7 +1039,6 @@ void BitcoinGUI::gotoSendCoinsPage()
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
-#ifdef USE_GUITESTING
 void BitcoinGUI::gotoMintingPage()
 {
     mintingViewAction->setChecked(true);
@@ -823,7 +1058,6 @@ void BitcoinGUI::gotoBlockexplorerPage()
 
 }
 
-#endif
 
 void BitcoinGUI::gotoSignMessageTab(QString addr)
 {

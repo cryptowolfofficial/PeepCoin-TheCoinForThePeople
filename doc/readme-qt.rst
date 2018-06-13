@@ -4,7 +4,7 @@ Peepcoin-qt: Qt5 GUI for Peepcoin
 Build instructions
 ===================
 
-Debian
+Debian (Not up to date)
 -------
 
 First, make sure that the required packages for Qt5 development of your
@@ -34,17 +34,68 @@ Windows
 
 Windows build instructions:
 
-- Download the `QT Windows SDK`_ and install it. You don't need the Symbian stuff, just the desktop Qt.
-
-- Compile openssl, boost and dbcxx.
-
-- Open the .pro file in QT creator and build as normal (ctrl-B)
-
-.. _`QT Windows SDK`: http://qt-project.org/downloads
+See build-msw.txt
 
 
 Mac OS X
 --------
+Homebrew (current updated build steps)
+- Install Homebrew - http://brew.sh
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+- Accept Xcode License and allow it to install command line tools
+
+-Install Git
+brew install git
+
+- Install Berkley DB 4.8
+brew install berkeley-db4
+
+- Install OpenSSL
+brew install openssl
+
+- Install Boost
+brew uninstall boost (ONLY if Boost is already installed) - 
+brew install boost@1.60
+brew link boost@1.60 -force
+(also testing with boost@1.57 for wallet.dat issue)
+
+- Install QT
+brew install qt5
+brew link qt5 -force
+
+- Install QREncode
+brew install libqrencode
+
+- Install WGet
+brew install wget
+
+- Download, compile, install Miniupnpc
+wget -O miniupnpc.tar.gz http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20150206.tar.gz
+tar xvzf miniupnpc.tar.gz
+mv miniupnpc-1.9.20150206 miniupnpc
+cd miniupnpc
+make -f Makefile upnpc-static
+sudo INSTALLPREFIX=/usr/local make install
+
+- Clone DAPSCoin GitHub
+https://github.com/DAPSCoin/PeepCoin-TheCoinForThePeople.git
+
+- Change to PeepCoin-TheCoinForThePeople directory
+cd PeepCoin-TheCoinForThePeople
+
+Build Peepcoin-Qt
+qmake RELEASE=1 USE_QRCODE=1
+make
+
+-Install EasyInstll and AppScript
+sudo easy_install appscript
+
+To deploy .dmg:
+~/PeepCoin-TheCoinForThePeople/contrib/macdeploy/macdeployqtplus peepcoin-Qt.app -add-qt-tr da,de,es,hu,ru,uk,zh_CN,zh_TW -dmg -fancy ~/PeepCoin-TheCoinForThePeople/contrib/macdeploy/fancy.plist -verbose 2
+
+
+Mac Ports (not up to date)
 
 - Download and install the `Qt Mac OS X SDK`_. It is recommended to also install Apple's Xcode with UNIX tools.
 

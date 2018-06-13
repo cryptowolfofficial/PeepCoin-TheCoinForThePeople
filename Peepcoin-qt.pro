@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = peepcoin-qt
-VERSION = 1.0.2
+VERSION = 1.0.3.0
 INCLUDEPATH += src src/json src/qt
 QT += core gui network printsupport
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE USE_IPV6 BOOST_SPIRIT_THREADSAFE BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN __NO_SYSTEM_INCLUDES
@@ -32,8 +32,8 @@ MINIUPNPC_INCLUDE_PATH=C:/deps/
 MINIUPNPC_LIB_PATH=C:/deps/miniupnpc
 LIBPNG_INCLUDE_PATH=C:/deps/libpng-1.6.16
 LIBPNG_LIB_PATH=C:/deps/libpng-1.6.16/.libs
-QRENCODE_INCLUDE_PATH=C:/deps/qrencode-3.4.4
-QRENCODE_LIB_PATH=C:/deps/qrencode-3.4.4/.libs
+QRENCODE_INCLUDE_PATH=C:/deps/qrencode-4.0.2
+QRENCODE_LIB_PATH=C:/deps/qrencode-4.0.2/.libs
 } 
 # for boost 1.37, add -mt to the boost libraries
 # use: qmake BOOST_LIB_SUFFIX=-mt
@@ -76,25 +76,6 @@ win32:QMAKE_LFLAGS *= -Wl,--large-address-aware -static
 win32:QMAKE_LFLAGS += -static-libgcc -static-libstdc++
 lessThan(QT_MAJOR_VERSION, 5): win32: QMAKE_LFLAGS *= -static
 
-# use: qmake "USE_LITESTAKE=1"
-# This feature implements a delay between hashing so the CPU usage is reduced.
-# Checkout HyperStake - Project for more details
-contains(USE_LITESTAKE,1){
-    message(Building with Litestake feature)
-    DEFINES += USE_LITESTAKE
-}else{
-    message(Building without Litestake feature)
-}
-contains(USE_GUITESTING,1){
-    message(Building beta GUI elements)
-    DEFINES += USE_GUITESTING
-}
-contains(USE_STAKECOMBINATION,1){
-    message(Building with Stakecombination feature)
-    DEFINES += USE_STAKECOMBINATION
-}else{
-    message(Building without Stakecombination feautre)
-}
 # use: qmake "USE_QRCODE=1"
 # libqrencode (http://fukuchi.org/works/qrencode/index.en.html) must be installed for support
 contains(USE_QRCODE, 1) {

@@ -69,7 +69,7 @@ private:
     AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
     SignVerifyMessageDialog *signVerifyMessageDialog;
-#ifdef USE_GUITESTING
+
     // Minting View
     QAction *mintingViewAction;
     QWidget *mintingPage;
@@ -79,8 +79,6 @@ private:
     QAction *blockexplorerAction;
     BlockBrowser *blockExplorer;
 
-
-#endif
     QLabel *labelEncryptionIcon;
     QLabel *labelStakingIcon;
     QLabel *labelConnectionsIcon;
@@ -97,6 +95,11 @@ private:
     QAction *signMessageAction;
     QAction *verifyMessageAction;
     QAction *aboutAction;
+	QAction *faqAction;
+	QAction *faq2Action;
+	QAction *faq3Action;
+	QAction *swapAction;
+	QAction *whitepaperAction;
     QAction *receiveCoinsAction;
     QAction *optionsAction;
     QAction *toggleHideAction;
@@ -108,13 +111,35 @@ private:
     QAction *lockWalletAction;
     QAction *aboutQtAction;
     QAction *openRPCConsoleAction;
+	QAction *bleuBTCAction;
+	QAction *bleuDOGEAction;
+	QAction *bleuETHAction;
+	QAction *bleuUSDTAction;
+	QAction *tradeOgreAction;
+	QAction *cryptoHubAction;
+	QAction *cpatexBTCAction;
+	QAction *cpatexDOGEAction;
+	QAction *otherExchangesAction;
+	QAction *facebookAction;
+	QAction *twitterAction;
+	QAction *discordAction;
+	QAction *telegramAction;
+	QAction *telegram2Action;
+	QAction *telegram3Action;
+	QAction *telegram4Action;
+	QAction *mediumAction;
+	QAction *steemitAction;
+	QAction *instagramAction;
+	QAction *redditAction;
+	QAction *cryptobridgeAction;
+	QAction *cryptopiaAction;
 
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
     TransactionView *transactionView;
     RPCConsole *rpcConsole;
 
-    QMovie *syncIconMovie;
+	int spinnerFrame;
 
     uint64_t nWeight;
 
@@ -168,15 +193,42 @@ private slots:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
-#ifdef USE_GUITESTING
+    /** Switch to Staking page */
     void gotoMintingPage();
-
+    /** Switch to Block Explorer page */
     void gotoBlockexplorerPage();
-#endif
+
     /** Show configuration dialog */
     void optionsClicked();
     /** Show about dialog */
     void aboutClicked();
+    void faqClicked();
+	void faq2Clicked();
+	void faq3Clicked();
+	void swapClicked();
+	void whitepaperClicked();
+	void bleuBTCClicked();
+	void bleuDOGEClicked();
+	void bleuETHClicked();
+	void bleuUSDTClicked();
+	void tradeOgreClicked();
+	void cryptoHubClicked();
+	void cpatexBTCClicked();
+	void cpatexDOGEClicked();
+	void otherExchangesClicked();
+	void facebookActionClicked();
+	void twitterActionClicked();
+	void discordActionClicked();
+	void telegramActionClicked();
+	void telegram2ActionClicked();
+	void telegram3ActionClicked();
+	void telegram4ActionClicked();
+	void mediumActionClicked();
+	void redditActionClicked();
+	void instagramActionClicked();
+	void steemitActionClicked();
+	
+	
 #ifndef Q_OS_MAC
     /** Handle tray icon clicked */
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
